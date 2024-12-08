@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>รายงานวิเคราะห์กระแสเงินสดผ่านธนาคาร</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            height: 400px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: right;
+        }
+        th {
+            background-color: #f8f9fa;
+            text-align: center;
+        }
+        .bank-header {
+            background-color: #e9ecef;
+            font-weight: bold;
+            text-align: left;
+        }
+        .month-column {
+            text-align: left;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        .summary-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px 0;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        h1, h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        .positive { color: #28a745; }
+        .negative { color: #dc3545; }
+        .notes {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .tab-container {
+            margin: 20px 0;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .section {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 5px 5px 5px;
+        }
+        .section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h1>รายงานวิเคราะห์กระแสเงินสดผ่านธนาคาร</h1>
+            <h3>ระยะเวลา: มิถุนายน - พฤศจิกายน 2567</h3>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="showSection('overview')">ภาพรวม</button>
+            <button class="tab" onclick="showSection('ktb')">ธนาคารกรุงไทย</button>
+            <button class="tab" onclick="showSection('kbank')">ธนาคารกสิกรไทย</button>
+        </div>
+
+        <div id="overview" class="section active">
+            <h2>ภาพรวมกระแสเงินสด</h2>
+            <div class="chart-container">
+                <canvas id="overviewChart"></canvas>
+            </div>
+            
+            <div class="summary-box">
+                <h3>สรุปรวมทั้งสองธนาคาร</h3>
+                <table>
+                    <tr>
+                        <th>รายการ</th>
+                        <th>ธนาคารกรุงไทย</th>
+                        <th>ธนาคารกสิกรไทย</th>
+                        <th>รวม</th>
+                    </tr>
+                    <tr>
+                        <td class="month-column">รวมเงินเข้า</td>
+                        <td>5,079,495.97</td>
+                        <td>86,991,006.07</td>
+                        <td>92,070,502.04</td>
+                    </tr>
+                    <tr>
+                        <td class="month-column">รวมเงินออก</td>
+                        <td>5,760,760.91</td>
+                        <td>87,487,904.98</td>
+                        <td>93,248,665.89</td>
+                    </tr>
+                    <tr>
+                        <td class="month-column">ยอดคงเหลือ</td>
+                        <td>93,785.84</td>
+                        <td>52,505.39</td>
+                        <td>146,291.23</td>
+                    </tr>
+                    <tr>
+                        <td class="month-column">ผลต่างสุทธิ</td>
+                        <td class="negative">-681,264.94</td>
+                        <td class="negative">-496,898.91</td>
+                        <td class="negative">-1,178,163.85</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div id="ktb" class="section">
+            <h2>ธนาคารกรุงไทย</h2>
+            <div class="chart-container">
+                <canvas id="ktbChart"></canvas>
+            </div>
+            
+            <table>
+                <tr>
+                    <th>เดือน</th>
+                    <th>เงินเข้า</th>
+                    <th>เงินออก</th>
+                    <th>ยอดคงเหลือ</th>
+                    <th>ผลต่าง</th>
+                </tr>
+                <tr>
+                    <td class="month-column">มิ.ย. 2567</td>
+                    <td>1,300,387.85</td>
+                    <td>1,299,917.30</td>
+                    <td>675.10</td>
+                    <td class="positive">+470.55</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ก.ค. 2567</td>
+                    <td>1,183,523.04</td>
+                    <td>1,077,364.76</td>
+                    <td>106,833.38</td>
+                    <td class="positive">+106,158.28</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ส.ค. 2567</td>
+                    <td>759,938.04</td>
+                    <td>759,869.88</td>
+                    <td>106,901.54</td>
+                    <td class="positive">+68.16</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ก.ย. 2567</td>
+                    <td>983,570.00</td>
+                    <td>1,011,524.50</td>
+                    <td>78,947.04</td>
+                    <td class="negative">-27,954.50</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ต.ค. 2567</td>
+                    <td>426,516.00</td>
+                    <td>699,405.30</td>
+                    <td>23,509.68</td>
+                    <td class="negative">-272,889.30</td>
+                </tr>
+                <tr>
+                    <td class="month-column">พ.ย. 2567</td>
+                    <td>425,561.04</td>
+                    <td>912,679.17</td>
+                    <td>93,785.84</td>
+                    <td class="negative">-487,118.13</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="month-column">รวม</td>
+                    <td>5,079,495.97</td>
+                    <td>5,760,760.91</td>
+                    <td>93,785.84</td>
+                    <td class="negative">-681,264.94</td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="kbank" class="section">
+            <h2>ธนาคารกสิกรไทย</h2>
+            <div class="chart-container">
+                <canvas id="kbankChart"></canvas>
+            </div>
+            
+            <table>
+                <tr>
+                    <th>เดือน</th>
+                    <th>เงินเข้า</th>
+                    <th>เงินออก</th>
+                    <th>ยอดคงเหลือ</th>
+                    <th>ผลต่าง</th>
+                </tr>
+                <tr>
+                    <td class="month-column">มิ.ย. 2567</td>
+                    <td>5,653,808.00</td>
+                    <td>5,642,251.61</td>
+                    <td>560,960.69</td>
+                    <td class="positive">+11,556.39</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ก.ค. 2567</td>
+                    <td>11,675,934.94</td>
+                    <td>11,688,437.63</td>
+                    <td>548,458.00</td>
+                    <td class="negative">-12,502.69</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ส.ค. 2567</td>
+                    <td>15,987,654.61</td>
+                    <td>15,964,112.40</td>
+                    <td>572,000.21</td>
+                    <td class="positive">+23,542.21</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ก.ย. 2567</td>
+                    <td>18,456,789.22</td>
+                    <td>18,478,789.31</td>
+                    <td>550,000.12</td>
+                    <td class="negative">-22,000.09</td>
+                </tr>
+                <tr>
+                    <td class="month-column">ต.ค. 2567</td>
+                    <td>17,654,321.30</td>
+                    <td>17,704,321.42</td>
+                    <td>500,000.00</td>
+                    <td class="negative">-50,000.12</td>
+                </tr>
+                <tr>
+                    <td class="month-column">พ.ย. 2567</td>
+                    <td>17,562,498.00</td>
+                    <td>17,509,992.61</td>
+                    <td>52,505.39</td>
+                    <td class="positive">+52,505.39</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="month-column">รวม</td>
+                    <td>86,991,006.07</td>
+                    <td>87,487,904.98</td>
+                    <td>52,505.39</td>
+                    <td class="negative">-496,898.91</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="notes">
+            <h3>ข้อสังเกตที่สำคัญ:</h3>
+            <ol>
+                <li>ปริมาณธุรกรรมของธนาคารกสิกรไทยสูงกว่าธนาคารกรุงไทยประมาณ 17 เท่า</li>
+                <li>ทั้งสองบัญชีมีแนวโน้มยอดคงเหลือลดลงในช่วงเดือนพฤศจิกายน 2567</li>
+                <li>พบรูปแบบการทำธุรกรรม:
+                    <ul>
+                        <li>มีการโอนเงินระหว่างบัญชีจำนวนมาก</li>
+                        <li>มีธุรกรรมการชำระเงินผ่านร้านค้า (MORPSD) เป็นประจำ</li>
+                        <li>มีการโอนเงินเข้า-ออกหลายครั้งต่อวัน</li>
+                    </ul>
+                </li>
+                <li>ความเสี่ยงที่พบ:
+                    <ul>
+                        <li>ยอดคงเหลือในบัญชีมีแนวโน้มลดลงอย่างต่อเนื่อง</li>
+                        <li>มีการเคลื่อนไหวเงินสูงมากเมื่อเทียบกับยอดคงเหลือ</li>
+                        <li>บางเดือนมียอดเงินออกมากกว่าเงินเข้าอย่างมีนัยสำคัญ</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // ฟังก์ชันสำหรับแสดง/ซ่อนแท็บ
+        function showSection(sectionId) {
+            // ซ่อนทุก section
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            // แสดง section ที่เลือก
+            document.getElementById(sectionId).classList.add('active');
+            
+            // อัพเดทสถานะปุ่ม
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // ข้อมูลสำหรับกราฟ
+        const months = ['มิ.ย. 67', 'ก.ค. 67', 'ส.ค. 67', 'ก.ย. 67', 'ต.ค. 67', 'พ.ย. 67'];
+        
+        // กราฟภาพรวม
+        new Chart(document.getElementById('overviewChart'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'ธนาคารกรุงไทย - ยอดคงเหลือ',
+                        data: [675.10, 106833.38, 106901.54, 78947.04, 23509.68, 93785.84],
+                        borderColor: '#FF6384',
+                        fill: false
+                    },
+                    {
+                        label: 'ธนาคารกสิกรไทย - ยอดคงเหลือ',
+                        data: [560960.69, 548458.00, 572000.21, 550000.12, 500000.00, 52505.39],
+                        borderColor: '#36A2EB',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // กราฟธนาคารกรุงไทย
+        new Chart(document.getElementById('ktbChart'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'เงินเข้า',
+                        data: [1300387.85, 1183523.04, 759938.04, 983570.00, 426516.00, 425561.04],
+                        borderColor: '#4BC0C0',
+                        fill: false
+                    },
+                    {
+                        label: 'เงินออก',
+                        data: [1299917.30, 1077364.76, 759869.88, 1011524.50, 699405.30, 912679.17],
+                        borderColor: '#FF6384',
+                        fill: false
+                    },
+                    {
+                        label: 'ยอดคงเหลือ',
+                        data: [675.10, 106833.38, 106901.54, 78947.04, 23509.68, 93785.84],
+                        borderColor: '#FFCE56',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // กราฟธนาคารกสิกรไทย
+        new Chart(document.getElementById('kbankChart'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'เงินเข้า',
+                        data: [5653808.00, 11675934.94, 15987654.61, 18456789.22, 17654321.30, 17562498.00],
+                        borderColor: '#4BC0C0',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'เงินออก',
+                        data: [5642251.61, 11688437.63, 15964112.40, 18478789.31, 17704321.42, 17509992.61],
+                        borderColor: '#FF6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderWidth: 3,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'ยอดคงเหลือ',
+                        data: [560960.69, 548458.00, 572000.21, 550000.12, 500000.00, 52505.39],
+                        borderColor: '#FFCE56',
+                        backgroundColor: 'rgba(255, 206, 86, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    </script>
+</body>
+</html>
